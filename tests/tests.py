@@ -1,16 +1,23 @@
 # -*- coding: utf-8 -*-
 
 import datetime
+from unittest import TestCase
 
-from django.test import TestCase
-from django.utils import timezone
+from mongoengine import connect, disconnect
 
 from cursor_pagination import CursorPaginator, InvalidCursor
-
 from .models import Author, Post
 
 
 class TestNoArgs(TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        connect("mongoenginetest", host="mongomock://localhost")
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        disconnect()
+
     def test_empty(self):
         paginator = CursorPaginator(Post.objects.all(), ('id',))
         page = paginator.page()
@@ -31,13 +38,19 @@ class TestNoArgs(TestCase):
 class TestForwardPagination(TestCase):
 
     @classmethod
-    def setUpTestData(cls):
-        now = timezone.now()
+    def setUpClass(cls) -> None:
+        connect("mongoenginetest", host="mongomock://localhost")
+        now = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+
         cls.items = []
         for i in range(20):
             post = Post.objects.create(name='Name %s' % i, created=now - datetime.timedelta(hours=i))
             cls.items.append(post)
         cls.paginator = CursorPaginator(Post.objects.all(), ('-created',))
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        disconnect()
 
     def test_first_page(self):
         page = self.paginator.page(first=2)
@@ -73,13 +86,18 @@ class TestForwardPagination(TestCase):
 class TestBackwardsPagination(TestCase):
 
     @classmethod
-    def setUpTestData(cls):
-        now = timezone.now()
+    def setUpClass(cls) -> None:
+        connect("mongoenginetest", host="mongomock://localhost")
+        now = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
         cls.items = []
         for i in range(20):
             post = Post.objects.create(name='Name %s' % i, created=now - datetime.timedelta(hours=i))
             cls.items.append(post)
         cls.paginator = CursorPaginator(Post.objects.all(), ('-created',))
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        disconnect()
 
     def test_first_page(self):
         page = self.paginator.page(last=2)
@@ -115,8 +133,9 @@ class TestBackwardsPagination(TestCase):
 class TestTwoFieldPagination(TestCase):
 
     @classmethod
-    def setUpTestData(cls):
-        now = timezone.now()
+    def setUpClass(cls) -> None:
+        connect("mongoenginetest", host="mongomock://localhost")
+        now = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
         cls.items = []
         data = [
             (now, 'B 横浜市'),
@@ -127,6 +146,10 @@ class TestTwoFieldPagination(TestCase):
         for time, name in data:
             post = Post.objects.create(name=name, created=time)
             cls.items.append(post)
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        disconnect()
 
     def test_order(self):
         paginator = CursorPaginator(Post.objects.all(), ('created', 'name'))
@@ -151,7 +174,8 @@ class TestTwoFieldPagination(TestCase):
 
 class TestRelationships(TestCase):
     @classmethod
-    def setUpTestData(cls):
+    def setUpClass(cls) -> None:
+        connect("mongoenginetest", host="mongomock://localhost")
         cls.items = []
         author_1 = Author.objects.create(name='Ana')
         author_2 = Author.objects.create(name='Bob')
@@ -159,6 +183,10 @@ class TestRelationships(TestCase):
             post = Post.objects.create(name='Name %02d' % i, author=author_1 if i % 2 else author_2)
             cls.items.append(post)
         cls.paginator = CursorPaginator(Post.objects.all(), ('author__name', 'name'))
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        disconnect()
 
     def test_first_page(self):
         page = self.paginator.page(first=2)

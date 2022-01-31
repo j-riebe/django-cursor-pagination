@@ -16,9 +16,10 @@ setup(
     author_email='devteam@photocrowd.com',
     url='https://github.com/photocrowd/django-cursor-pagination',
     license='BSD',
+    install_requires=["mongoengine"],
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
-        'Framework :: Django',
+        'Framework :: Mongoengine',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
         'Natural Language :: English',

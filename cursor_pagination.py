@@ -1,29 +1,7 @@
 from base64 import b64decode, b64encode
 from collections.abc import Sequence
 
-from django.db.models import Field, Func, Value, TextField
-from django.utils.translation import gettext_lazy as _
-
-
-class TupleField(Field):
-    pass
-
-
-class Tuple(Func):
-    function = ''
-    output_field = TupleField()
-
-    def get_group_by_cols(self):
-        # Irrespective of whether we have an aggregate, we want to drill down
-        # to the children here. You can't GROUP BY a tuple like you would for a
-        # "normal" function - i.e. GROUP BY ("a", "b") is invalid SQL. However,
-        # it's logically equivalent to GROUP BY "a", "b" in call cases, so we
-        # never need the case where this 'function' needs to be included in the
-        # clause.
-        cols = []
-        for expr in self.source_expressions:
-            cols += expr.get_group_by_cols()
-        return cols
+from mongoengine import QuerySet
 
 
 class InvalidCursor(Exception):
@@ -60,7 +38,7 @@ class CursorPage(Sequence):
 
 class CursorPaginator(object):
     delimiter = '|'
-    invalid_cursor_message = _('Invalid cursor')
+    invalid_cursor_message = 'Invalid cursor'
 
     def __init__(self, queryset, ordering):
         self.queryset = queryset.order_by(*ordering)
@@ -100,15 +78,21 @@ class CursorPaginator(object):
             additional_kwargs['has_next'] = bool(before)
         return CursorPage(items, self, **additional_kwargs)
 
-    def apply_cursor(self, cursor, queryset, reverse=False):
+    def apply_cursor(self, cursor: str, queryset: QuerySet, reverse: bool = False):
+        """EDIT: This function was edited to make it work with mongoengine."""
         position = self.decode_cursor(cursor)
 
         is_reversed = self.ordering[0].startswith('-')
-        queryset = queryset.annotate(_cursor=Tuple(*[o.lstrip('-') for o in self.ordering]))
-        current_position = [Value(p, output_field=TextField()) for p in position]
         if reverse != is_reversed:
-            return queryset.filter(_cursor__lt=Tuple(*current_position))
-        return queryset.filter(_cursor__gt=Tuple(*current_position))
+            comparison_operator = "lt"
+        else:
+            comparison_operator = "gt"
+
+        query = {
+            f"{ordering_field.lstrip('-')}__{comparison_operator}": current_position
+            for ordering_field, current_position in zip(self.ordering, position)
+        }
+        return queryset.filter(**query)
 
     def decode_cursor(self, cursor):
         try:
