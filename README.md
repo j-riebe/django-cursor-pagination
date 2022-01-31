@@ -1,5 +1,13 @@
-Django cursor pagination [![Build Status](https://travis-ci.org/photocrowd/django-cursor-pagination.svg?branch=master)](https://travis-ci.org/photocrowd/django-cursor-pagination)
+~~Django~~ Mongoengine cursor pagination [![Build Status](https://travis-ci.org/photocrowd/django-cursor-pagination.svg?branch=master)](https://travis-ci.org/photocrowd/django-cursor-pagination)
 ========================
+
+**Note on this fork**: This fork modifies the original project to make 
+it compatible with mongoengine instead of django. Currently, there is
+no intention to merge it back into the original project.
+
+This version **only** supports **one field pagination!**
+
+--------
 
 A cursor based pagination system for Django. Instead of refering to specific
 pages by number, we give every item in the queryset a cursor based on its
