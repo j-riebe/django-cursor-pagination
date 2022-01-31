@@ -7,7 +7,12 @@ no intention to merge it back into the original project.
 
 This version **only** supports **one field pagination!**
 
+This project may be unstable so be sure to pin the specific commit-hash
+if you don't like surprises. 
+
 --------
+
+_From the original project:_
 
 A cursor based pagination system for Django. Instead of refering to specific
 pages by number, we give every item in the queryset a cursor based on its

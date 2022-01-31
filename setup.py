@@ -6,10 +6,10 @@ with open("README.md", "r") as fh:
 
 
 setup(
-    name='django-cursor-pagination',
+    name='mongoengine-cursor-pagination',
     py_modules=['cursor_pagination'],
     version='0.1.5',
-    description='Cursor based pagination for Django',
+    description='Cursor based pagination for Django (Mongoengine-Fork)',
     long_description=long_description,
     long_description_content_type="text/markdown",
     author='Photocrowd',
